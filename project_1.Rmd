@@ -1,0 +1,110 @@
+---
+title: "BIOS611 - Project I"
+author: "Yi Tang Chen"
+date: "`r format(Sys.time(), '%m/%d/%Y')`"
+output: html_document
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(caret)
+library(MASS)
+library(tidyverse)
+```
+
+#1.Carbon Dioxide Uptake in Grass Plants
+```{r}
+carbo2 = as_tibble(CO2)
+```
+
+
+```{r}
+ggplot(carbo2, aes(factor(conc), uptake)) +
+  geom_boxplot(aes(color = Treatment)) +
+  facet_wrap( ~ Type)
+
+```
+
+
+```{r}
+carbo2 %>% group_by(Type, Treatment, conc) %>%
+  summarise(mean_uptake = round(mean(uptake), 2)) %>%
+  arrange(mean_uptake)
+  
+```
+
+
+- The data was from an experiment on the cold tolerance of the grass species Echinochloa crus-galli, and was used as an example by Catherine Potvin, Martin Lechowicz and Serge Tardif to publish their paper "The statistical analysis of ecophysiological response curves obtained from experiments involving repeated measures" on the journal Ecology in 1990. The CO2 uptake is the measurement that indicate the cold tolerance of the plants. The higher the CO2 uptake, the colder the plant can tolerate. It was measured from six plants each from Quebec and Mississippi at several levels of CO2 concentration. In addition, half of plants of each type were chilled overnight before measuring the CO2 uptake. As the result, the plants from Quebec generally have higher cold tolerance, and the drop of the uptake after chilling is relatively the same and smaller than that from Mississippi based on the boxplots above. Considering this result, we can further conduct experiment on the cold tolerance of the species at different combination of CO2 concentration and chilling temperature to see how cold the species can tolerate.
+
+
+#2.Results from an Experiment on Plant Growth
+
+```{r}
+plantgrowth = as_tibble(PlantGrowth)
+```
+
+```{r}
+ggplot(plantgrowth, aes(group, weight)) +
+  geom_boxplot()
+```
+
+
+```{r}
+plantgrowth %>% group_by(group) %>%
+  summarize(mean_wt = mean(weight))
+```
+
+
+- The data was from an experiment to compare yields among a control and two treatment conditions, ans was used as an example in Dobson's book "An Introduction to Statistical Modelling". The weight of each dried plant is the measurement of interest. By graphing a boxplot and summarizing the data, it seems like treatment 2 yields heavier weight, and treatment 1 yields lighter weight than the weight of the control. As the next step, we can carry out ANOVA to test and compute Tukey's interval to see if there is a significant difference in mean weight among these groups.
+
+
+
+#3.New York Air Quality Measurements
+```{r}
+nyair = as_tibble(na.omit(airquality))
+```
+
+```{r}
+#featurePlot(x = nyair[c("Temp", "Solar.R", "Wind")], y = nyair$Ozone)
+ggplot(nyair, aes(Solar.R, Ozone)) +
+  geom_point(aes(color = cut_number(Wind, 2))) +
+  facet_wrap( ~ cut_number(Temp, 2), labeller = label_both) 
+```
+
+
+```{r}
+nyair %>% group_by(Month) %>%
+  summarize(mean_temp = mean(Temp),
+            mean_wind = mean(Wind),
+            mean_soloarR = mean(Solar.R),
+            mean_ozone = mean(Ozone)) %>%
+  arrange(mean_ozone)
+```
+
+- The data is the daily air quality measurements in New York from May to September in 1973 obtained from the New York State Department of Conservation(ozone data) and the National Weather service(meteorological data), and was used as an example in the book "Graphical Methods for Data Analysis" by John Chambers, William Cleveland, Paul Tukey and Beat Kleiner. `Ozone` is the measurement indicating the air quality. The higher the ozone, the worse the air quality. Based on the scatterplot above, the temperature seems to be the major factor that affects the relationship between ozone and solar radiation. As temperature is higher than 79 Fahrenheight, ozone increases as solar radiation increases. In contrast, as temperature is lower than 79 Fahrenheight, there is no relationship between ozone and solar radiation since ozone stays the same as solar radiation increases. In addition, according to the summarized data, when the mean temperature is high during the month, that is when it is summer, the mean ozone tends to be higher. Therefore, temperature might be the most important factor to examine when predicting the air quality. To further validate this hypothesis, we can pull or collect more data and build a multivariate statistical model to see if the predictor temperature is the most significant. 
+
+
+
+#4.Anorexia Data on Weight Change
+
+```{r}
+anorWtChg = as_tibble(anorexia)
+```
+
+```{r}
+anorWtChg %>% mutate(wt_diff = Postwt - Prewt) %>%
+  ggplot(aes(Treat, wt_diff)) +
+    geom_boxplot() +
+    geom_hline(yintercept = 0, color = "dodgerblue")
+```
+
+```{r}
+anorWtChg %>% mutate(wt_diff = Postwt - Prewt) %>%
+  group_by(Treat) %>% summarize(n_patients = n(), mean_wt_diff = mean(wt_diff),
+                                sd_wt_diff = sd(wt_diff))
+```
+
+
+- The data here is the weight change data collected from young female anorexia patients presented in the book "A Handbook of Small Data Sets" by David Hand, Fergus Daly, K. McConway, D. Lunn and E. Ostrowski. Patients wwere randomly assigned to three groups and receive respective treatments, namely cognitive behavioral treatment, family treatment, and lastly the control group. The weights before and after the treatment were then recorded. The weight change is calculated and illustrated on the boxplot above. Among three treatment groups, patients who received family treatment gained more weight than the other two groups. We can then conduct ANOVA test and compute Tukey's intervals to see if whether there is a significant difference in mean weight change among three groups to solidify this finding.
+
+
+
